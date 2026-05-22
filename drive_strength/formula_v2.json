@@ -1,0 +1,279 @@
+{
+  "version": "v2",
+  "train_seasons": [
+    1999,
+    2019
+  ],
+  "train_objective": "ppd_next_season",
+  "tune_s1_r": 0.39673224411320696,
+  "tune_ros_r": 0.4747242842247651,
+  "validate_s1_r": 0.49362514070584496,
+  "ridge_alpha_offense": 500.0,
+  "ridge_alpha_defense": 500.0,
+  "offense": {
+    "features": [
+      "progress_yards",
+      "progress_pct",
+      "first_downs_total",
+      "first_downs_on_1st",
+      "first_downs_on_2nd",
+      "first_downs_on_3rd",
+      "first_downs_on_4th",
+      "unsustained_explosion",
+      "turnover_interception",
+      "turnover_fumble_lost",
+      "turnover_on_downs",
+      "turnover_after_progress",
+      "turnover_penalty_interaction",
+      "off_penalty_yards",
+      "def_penalty_yards",
+      "def_penalty_auto_first_count",
+      "def_penalty_yards_16_plus",
+      "negative_play_rate",
+      "sack_count",
+      "start_yardline_100"
+    ],
+    "coefficients": {
+      "progress_yards": 0.02920577098197097,
+      "progress_pct": 0.025191930043724303,
+      "first_downs_total": 0.024500475438053747,
+      "first_downs_on_1st": 0.025370055385856502,
+      "first_downs_on_2nd": 0.01949381482007724,
+      "first_downs_on_3rd": 0.021409581646307355,
+      "first_downs_on_4th": -0.013524185211137069,
+      "unsustained_explosion": -0.006404921040855311,
+      "turnover_interception": -0.014741075489416057,
+      "turnover_fumble_lost": -0.007379103122778653,
+      "turnover_on_downs": -0.014617505940984413,
+      "turnover_after_progress": 0.029205770981970938,
+      "turnover_penalty_interaction": 0.00853353760450905,
+      "off_penalty_yards": 0.009047000005451358,
+      "def_penalty_yards": 0.002732021315445014,
+      "def_penalty_auto_first_count": 0.017968418139358653,
+      "def_penalty_yards_16_plus": -0.009025443686562941,
+      "negative_play_rate": 0.01871795479001061,
+      "sack_count": -0.014302876711992174,
+      "start_yardline_100": 0.005753294075017044
+    },
+    "intercept": 1.924384765553658,
+    "feature_stats": {
+      "progress_yards": {
+        "mean": 26.86777004978533,
+        "std": 3.4688020895639653
+      },
+      "progress_pct": {
+        "mean": 0.3871798603744297,
+        "std": 0.04516995168913455
+      },
+      "first_downs_total": {
+        "mean": 2.60842477655705,
+        "std": 0.29412131187365986
+      },
+      "first_downs_on_1st": {
+        "mean": 0.9828512649810942,
+        "std": 0.1526192792014119
+      },
+      "first_downs_on_2nd": {
+        "mean": 0.7835085366477269,
+        "std": 0.12139715421717011
+      },
+      "first_downs_on_3rd": {
+        "mean": 0.47493910758246516,
+        "std": 0.0717933187345684
+      },
+      "first_downs_on_4th": {
+        "mean": 0.36149608276800294,
+        "std": 0.05027847195249258
+      },
+      "unsustained_explosion": {
+        "mean": 0.047931020553084895,
+        "std": 0.04742676085926129
+      },
+      "turnover_interception": {
+        "mean": 0.08322614766641434,
+        "std": 0.02391624066528664
+      },
+      "turnover_fumble_lost": {
+        "mean": 0.05408602581682612,
+        "std": 0.017661979553503567
+      },
+      "turnover_on_downs": {
+        "mean": 0.0373444821842876,
+        "std": 0.01652351500689862
+      },
+      "turnover_after_progress": {
+        "mean": 26.86777004978533,
+        "std": 3.4688020895639653
+      },
+      "turnover_penalty_interaction": {
+        "mean": 4.142386019323459,
+        "std": 1.0882759768792905
+      },
+      "off_penalty_yards": {
+        "mean": 0.454292597272543,
+        "std": 0.23290622124388322
+      },
+      "def_penalty_yards": {
+        "mean": 0.7926164909413602,
+        "std": 0.3193257886262832
+      },
+      "def_penalty_auto_first_count": {
+        "mean": 0.012948734529994019,
+        "std": 0.01019491292772764
+      },
+      "def_penalty_yards_16_plus": {
+        "mean": 0.003427334258470281,
+        "std": 0.017191434946341393
+      },
+      "negative_play_rate": {
+        "mean": 0.11605062907681547,
+        "std": 0.016976267888750632
+      },
+      "sack_count": {
+        "mean": 0.1971740488084194,
+        "std": 0.057137898954201946
+      },
+      "start_yardline_100": {
+        "mean": 70.2530265221229,
+        "std": 2.3382206829304026
+      }
+    },
+    "calibration": {
+      "scale": 1.1407421520007968,
+      "shift": 0.0
+    }
+  },
+  "defense": {
+    "features": [
+      "progress_prevented",
+      "progress_pct_prevented",
+      "first_downs_allowed_total",
+      "first_downs_allowed_on_1st",
+      "first_downs_allowed_on_2nd",
+      "first_downs_allowed_on_3rd",
+      "first_downs_allowed_on_4th",
+      "unsustained_explosion_allowed",
+      "turnover_forced_interception",
+      "turnover_forced_fumble",
+      "turnover_forced_on_downs",
+      "turnover_after_progress_allowed",
+      "turnover_bonus_interaction",
+      "def_penalty_yards_committed",
+      "off_penalty_yards_drawn",
+      "off_penalty_auto_first_drawn",
+      "off_penalty_yards_16_plus_drawn",
+      "negative_play_forced_rate",
+      "sack_forced_count",
+      "start_yardline_100"
+    ],
+    "coefficients": {
+      "progress_prevented": -0.024773581526145387,
+      "progress_pct_prevented": -0.016838285240101707,
+      "first_downs_allowed_total": -0.007018709216428111,
+      "first_downs_allowed_on_1st": -0.013850635793088456,
+      "first_downs_allowed_on_2nd": -0.005402588234776586,
+      "first_downs_allowed_on_3rd": -0.0017299932029719361,
+      "first_downs_allowed_on_4th": 0.018469170225874045,
+      "unsustained_explosion_allowed": -0.004325377106933911,
+      "turnover_forced_interception": 0.010426408925098597,
+      "turnover_forced_fumble": 0.009484330725729533,
+      "turnover_forced_on_downs": 0.004306398745513431,
+      "turnover_after_progress_allowed": -0.02477358152614538,
+      "turnover_bonus_interaction": 0.011201438194421178,
+      "def_penalty_yards_committed": -0.00452507052328365,
+      "off_penalty_yards_drawn": -0.017694468566656994,
+      "off_penalty_auto_first_drawn": 0.0,
+      "off_penalty_yards_16_plus_drawn": 0.0,
+      "negative_play_forced_rate": -0.013097993614118278,
+      "sack_forced_count": 0.006405826509555873,
+      "start_yardline_100": -0.014007282098242951
+    },
+    "intercept": -1.9370084114472619,
+    "feature_stats": {
+      "progress_prevented": {
+        "mean": 26.92936329864071,
+        "std": 2.91414619207228
+      },
+      "progress_pct_prevented": {
+        "mean": 0.38836286463767433,
+        "std": 0.03707247065982066
+      },
+      "first_downs_allowed_total": {
+        "mean": 2.614638459673422,
+        "std": 0.2515634893885262
+      },
+      "first_downs_allowed_on_1st": {
+        "mean": 0.9855665222111779,
+        "std": 0.1299027748559371
+      },
+      "first_downs_allowed_on_2nd": {
+        "mean": 0.7858153518148556,
+        "std": 0.10591354452331951
+      },
+      "first_downs_allowed_on_3rd": {
+        "mean": 0.47627757565089957,
+        "std": 0.06132611385799787
+      },
+      "first_downs_allowed_on_4th": {
+        "mean": 0.3613262458407004,
+        "std": 0.04435282530512878
+      },
+      "unsustained_explosion_allowed": {
+        "mean": 0.04760784980383361,
+        "std": 0.045142349311286314
+      },
+      "turnover_forced_interception": {
+        "mean": 0.08234681865171288,
+        "std": 0.02551337677539548
+      },
+      "turnover_forced_fumble": {
+        "mean": 0.05381725960761076,
+        "std": 0.01739168978927343
+      },
+      "turnover_forced_on_downs": {
+        "mean": 0.03676314187147015,
+        "std": 0.015530719851496587
+      },
+      "turnover_after_progress_allowed": {
+        "mean": 26.92936329864071,
+        "std": 2.91414619207228
+      },
+      "turnover_bonus_interaction": {
+        "mean": 4.097472080653383,
+        "std": 1.153482184895678
+      },
+      "def_penalty_yards_committed": {
+        "mean": 0.7881956784174524,
+        "std": 0.32724295881755283
+      },
+      "off_penalty_yards_drawn": {
+        "mean": 0.4542792765116626,
+        "std": 0.22330852638839413
+      },
+      "off_penalty_auto_first_drawn": {
+        "mean": 0.0,
+        "std": 1.0
+      },
+      "off_penalty_yards_16_plus_drawn": {
+        "mean": 0.0,
+        "std": 1.0
+      },
+      "negative_play_forced_rate": {
+        "mean": 0.11620687207958574,
+        "std": 0.016559058060865085
+      },
+      "sack_forced_count": {
+        "mean": 0.19525094235799936,
+        "std": 0.040645858043986766
+      },
+      "start_yardline_100": {
+        "mean": 70.1795673220648,
+        "std": 2.3773586381042393
+      }
+    },
+    "calibration": {
+      "scale": 1.0,
+      "shift": 0.0
+    }
+  }
+}
