@@ -77,7 +77,34 @@ def run_gates(
     )
 
     ros_r, ros_msg = rest_of_season_corr(drives, split_week=8)
-    results.append(("ros_pdp", True, ros_msg))
+    from ..validation.metrics_report import team_early_epa_per_play, _corr
+
+    try:
+        epa_e = team_early_epa_per_play(drives, seasons, split_week=8)
+        if "drive_points_scored" not in drives.columns:
+            from ..labels import add_drive_points_column
+
+            drives = add_drive_points_column(pl.from_pandas(drives)).to_pandas()
+        late = (
+            drives.loc[drives["week"] > 8]
+            .groupby(["posteam", "season"])
+            .agg(pts=("drive_points_scored", "sum"), n=("game_id", "count"))
+            .reset_index()
+            .rename(columns={"posteam": "team"})
+        )
+        late["ppd_ros"] = late["pts"] / late["n"].replace(0, np.nan)
+        m = epa_e.merge(late[["team", "season", "ppd_ros"]], on=["team", "season"])
+        epa_ros_fair = _corr(m["epa_early"], m["ppd_ros"])
+    except Exception:
+        epa_ros_fair = float("nan")
+
+    results.append(
+        (
+            "ros_pdp",
+            True,
+            f"{ros_msg}; fair EPA early→ROS r={epa_ros_fair:.3f}",
+        )
+    )
 
     critical = (
         "team_a_vs_team_b",

@@ -55,6 +55,22 @@ def run_pipeline(
     week_df = aggregate_team_week(drives_scored, exclude_kneels=exclude_kneels)
     season_df = aggregate_team_season(drives_scored, exclude_kneels=exclude_kneels)
 
+    from .plots.metrics import team_epa_per_play
+
+    epa = team_epa_per_play(seasons)
+    season_df = season_df.merge(epa, on=["team", "season"], how="left")
+    pdp_col = (
+        "off_pdp_mean_shrunk"
+        if "off_pdp_mean_shrunk" in season_df.columns
+        else "off_pdp_mean"
+    )
+    if pdp_col in season_df.columns and "epa_per_play" in season_df.columns:
+        pdp_z = (season_df[pdp_col] - season_df[pdp_col].mean()) / season_df[pdp_col].std()
+        epa_z = (season_df["epa_per_play"] - season_df["epa_per_play"].mean()) / season_df[
+            "epa_per_play"
+        ].std()
+        season_df["process_vs_epa"] = pdp_z - epa_z
+
     drives_scored.to_csv(out_dir / "drives_pdp.csv", index=False)
     week_df.to_csv(out_dir / "team_week_pdp.csv", index=False)
     season_df.to_csv(out_dir / "team_season_pdp.csv", index=False)

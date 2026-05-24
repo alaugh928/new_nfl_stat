@@ -49,6 +49,10 @@ def _parse_args() -> argparse.Namespace:
     cmp_p.add_argument("--seasons", nargs="+", type=int, default=None)
     cmp_p.add_argument("--no-cache", action="store_true")
 
+    bench_p = sub.add_parser("benchmark", help="PDP vs EPA honest benchmark report")
+    bench_p.add_argument("--seasons", nargs="+", type=int, default=None)
+    bench_p.add_argument("--no-cache", action="store_true")
+
     return parser.parse_args()
 
 
@@ -99,6 +103,16 @@ def main() -> None:
         seasons = args.seasons or list(range(2018, DEFAULT_SEASONS_END + 1))
         path = run_comparison(seasons, no_cache=args.no_cache)
         logging.info("Wrote %s", path)
+    elif args.command == "benchmark":
+        from .validation.benchmark_summary import (
+            print_benchmark_report,
+            write_benchmark_reports,
+        )
+
+        seasons = args.seasons or list(range(2018, DEFAULT_SEASONS_END + 1))
+        drives, _, ts = run_pipeline(seasons, no_cache=args.no_cache)
+        write_benchmark_reports(drives, ts, seasons)
+        print_benchmark_report(drives, ts, seasons)
 
 
 if __name__ == "__main__":
