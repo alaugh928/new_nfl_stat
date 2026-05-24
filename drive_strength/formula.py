@@ -54,9 +54,10 @@ def _apply_linear(
             sd = float(st.get("std", 1.0)) or 1.0
             col = (col - float(st.get("mean", 0.0))) / sd
         raw += coefs[name] * col
+    sign = float(calibration.get("sign", 1.0))
     scale = float(calibration.get("scale", 1.0))
     shift = float(calibration.get("shift", 0.0))
-    return (raw * scale + shift).astype(np.float32)
+    return (sign * raw * scale + shift).astype(np.float32)
 
 
 def score_offense_pdp(df: pd.DataFrame, formula: dict[str, Any] | None = None) -> np.ndarray:
@@ -75,7 +76,7 @@ def score_offense_pdp(df: pd.DataFrame, formula: dict[str, Any] | None = None) -
 def score_defense_pdp(df: pd.DataFrame, formula: dict[str, Any] | None = None) -> np.ndarray:
     f = formula or load_formula()
     de = f["defense"]
-    return _apply_linear(
+    scores = _apply_linear(
         df,
         de["features"],
         de["coefficients"],
@@ -83,6 +84,8 @@ def score_defense_pdp(df: pd.DataFrame, formula: dict[str, Any] | None = None) -
         de.get("calibration", {"scale": 1.0, "shift": 0.0}),
         de.get("feature_stats"),
     )
+    # Drive-level linear scores can be negative on catastrophic drives; PDP is bounded below at 0.
+    return np.maximum(scores, 0.0)
 
 
 def offense_feature_names() -> list[str]:

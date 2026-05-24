@@ -148,5 +148,8 @@ def build_defensive_predictive_labels(drives_pl: pl.DataFrame) -> pl.DataFrame:
     )
     pdf = opp.sort(["team", "season"]).to_pandas()
     pdf["opp_ppd_next"] = pdf.groupby("team")["opp_ppd"].shift(-1)
+    league = float(pdf["opp_ppd"].mean())
     pdf["neg_opp_ppd_next"] = -pdf["opp_ppd_next"]
+    # Higher = better defense (fewer points allowed next season)
+    pdf["def_quality_next"] = league - pdf["opp_ppd_next"]
     return pdf

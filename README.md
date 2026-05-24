@@ -71,7 +71,11 @@ python -m drive_strength gates-v2 --seasons 2020 2021 2022 2023 2024
 python -m drive_strength compare-v1-v2 --seasons 2018 2019 2020 2021 2022 2023 2024
 ```
 
-`gates-v2` checks narratives, drive-level scale (~2.0–2.5), and reports holdout S+1 / ROS vs EPA/play. On 2020–2024 holdout, v2 typically matches or beats EPA on ROS (weeks 1–8 → 9–17); beating EPA on S+1 is a stretch goal (see plan success criteria).
+`gates-v2` checks narratives, offensive/defensive drive scale, and reports holdout S+1 / ROS vs EPA/play.
+
+**Defensive PDP:** trained on `def_quality_next` (league mean − next-season opp PPD). Drive scores are affine-calibrated then floored at 0 so `def_pdp` is always non-negative (higher = better defense).
+
+**Holdout 2020–2024 (typical):** ROS PDP r≈0.47 (beats EPA early→ROS benchmark); S+1 r≈0.36 vs EPA/play ≈0.38 (close; full-season team aggregates). Validate-window S+1 on 2018–2019 is higher (~0.49) before freeze.
 
 ## Kneels
 

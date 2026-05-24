@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import polars as pl
 
-from ..constants import TRAIN_HOLDOUT_SEASONS
+from ..constants import TRAIN_FEATURE_SPLIT_WEEK, TRAIN_HOLDOUT_SEASONS
 from ..labels import team_season_offense_labels
 from ..plots.metrics import team_epa_per_play
 from ..validation.metrics_report import season_over_season_for_column
@@ -27,6 +27,7 @@ def run_gates(
         .rename({"posteam": "team", "team_season_pts_per_drive": "ppd"})
         .to_pandas()
     )
+    split = TRAIN_FEATURE_SPLIT_WEEK
     pdp_col = (
         "off_pdp_mean_shrunk"
         if "off_pdp_mean_shrunk" in team_season.columns
@@ -53,7 +54,7 @@ def run_gates(
         (
             "s1_vs_epa",
             ok_s1,
-            f"PDP S+1 r={pdp_s1:.3f} vs EPA/play {epa_s1:.3f} (stretch gate; informational)",
+            f"PDP S+1 r={pdp_s1:.3f} vs EPA/play {epa_s1:.3f}",
         )
     )
 
@@ -64,9 +65,25 @@ def run_gates(
         ("drive_scale", ok_scale, f"holdout mean off_pdp={drive_mean:.3f} (target ~2.2)"),
     )
 
+    def_mean = float(d_hold["def_pdp"].mean())
+    def_min = float(d_hold["def_pdp"].min())
+    ok_def = 1.0 <= def_mean <= 2.5 and def_min >= -0.05
+    results.append(
+        (
+            "def_drive_scale",
+            ok_def,
+            f"holdout mean def_pdp={def_mean:.3f} min={def_min:.3f} (target ~1.5, higher=better)",
+        )
+    )
+
     ros_r, ros_msg = rest_of_season_corr(drives, split_week=8)
     results.append(("ros_pdp", True, ros_msg))
 
-    critical = ("team_a_vs_team_b", "turnover_narratives", "drive_scale")
+    critical = (
+        "team_a_vs_team_b",
+        "turnover_narratives",
+        "drive_scale",
+        "def_drive_scale",
+    )
     all_ok = all(r[1] for r in results if r[0] in critical)
     return all_ok, results

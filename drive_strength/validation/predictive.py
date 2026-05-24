@@ -10,13 +10,20 @@ import polars as pl
 from ..labels import team_season_offense_labels
 
 
-def season_over_season_corr(drives: pd.DataFrame) -> tuple[float, str]:
-    """Mean off_pdp in season S vs actual pts/drive in season S+1."""
+def season_over_season_corr(
+    drives: pd.DataFrame,
+    *,
+    split_week: int | None = 8,
+) -> tuple[float, str]:
+    """Mean off_pdp in season S (optionally weeks 1..split) vs PPD in season S+1."""
     if "drive_points_scored" not in drives.columns:
         drives = drives.copy()
 
+    d = drives
+    if split_week is not None and "week" in d.columns:
+        d = d.loc[d["week"] <= split_week]
     off = (
-        drives.groupby(["posteam", "season"], observed=True)["off_pdp"]
+        d.groupby(["posteam", "season"], observed=True)["off_pdp"]
         .mean()
         .reset_index()
         .rename(columns={"posteam": "team", "off_pdp": "pdp_mean"})

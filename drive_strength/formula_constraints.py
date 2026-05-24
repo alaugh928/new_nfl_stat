@@ -39,10 +39,16 @@ OFFENSE_NARRATIVE_RULES_V2: dict[str, str] = {
 }
 
 DEFENSE_NARRATIVE_RULES_V2: dict[str, str] = {
+    "progress_prevented": "negative",
+    "progress_pct_prevented": "negative",
+    "first_downs_allowed_total": "negative",
     "unsustained_explosion_allowed": "negative",
     "turnover_forced_interception": "positive",
     "turnover_forced_fumble": "positive",
+    "turnover_forced_on_downs": "positive",
     "turnover_bonus_interaction": "positive",
+    "negative_play_forced_rate": "positive",
+    "sack_forced_count": "positive",
 }
 
 

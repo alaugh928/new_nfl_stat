@@ -10,10 +10,12 @@ import pandas as pd
 from sklearn.linear_model import Ridge
 
 from .constants import (
+    DEFENSE_CALIBRATION_TARGET,
     DEFENSE_FORMULA_FEATURES_V2,
     DRIVE_CALIBRATION_TARGET,
     FORMULA_V2_PATH,
     OFFENSE_FORMULA_FEATURES_V2,
+    TRAIN_FEATURE_SPLIT_WEEK,
     TRAIN_FIT_SEASONS,
     TRAIN_TUNE_SEASONS,
     TRAIN_VALIDATE_SEASONS,
@@ -39,10 +41,15 @@ def _team_season_means(
     pdf: pd.DataFrame,
     features: list[str],
     team_col: str,
+    *,
+    max_week: int | None = None,
 ) -> pd.DataFrame:
     cols = [c for c in features if c in pdf.columns]
+    d = pdf
+    if max_week is not None and "week" in d.columns:
+        d = d.loc[d["week"] <= max_week]
     return (
-        pdf.groupby([team_col, "season"], observed=True)[cols]
+        d.groupby([team_col, "season"], observed=True)[cols]
         .mean()
         .reset_index()
     )
@@ -162,12 +169,23 @@ def _drive_level_calibration(
     target: float = DRIVE_CALIBRATION_TARGET,
     feature_stats: dict[str, dict[str, float]] | None = None,
 ) -> dict[str, float]:
+    """Affine calibration so league mean drive score ≈ target (preserves rank order)."""
     lo, hi = season_range
     d = drives[(drives["season"] >= lo) & (drives["season"] <= hi)]
     raw = _predict(d, features, coefs, intercept, feature_stats=feature_stats)
     mean_raw = float(np.nanmean(raw))
-    scale = target / mean_raw if mean_raw > 0 else 1.0
-    return {"scale": scale, "shift": 0.0}
+    if abs(mean_raw) < 1e-8:
+        return {"scale": 1.0, "shift": target, "sign": 1.0}
+    if mean_raw > 0:
+        cal = {"scale": target / mean_raw, "shift": 0.0, "sign": 1.0}
+    else:
+        cal = {"scale": 1.0, "shift": target - mean_raw, "sign": 1.0}
+    # Lift bottom tail so catastrophic drives are not large negative PDP
+    adjusted = cal["sign"] * raw * cal["scale"] + cal["shift"]
+    p01 = float(np.nanpercentile(adjusted, 1))
+    if p01 < 0.05:
+        cal["shift"] = float(cal["shift"]) + (0.05 - p01)
+    return cal
 
 
 def train_formula_v2(
@@ -190,6 +208,7 @@ def train_formula_v2(
     off_pdf = add_drive_points_column(off_feat).to_pandas()
 
     pred_labels = build_predictive_labels(off_feat)
+    split_wk = TRAIN_FEATURE_SPLIT_WEEK
     off_team_all = _team_season_means(off_pdf, OFFENSE_FORMULA_FEATURES_V2, "posteam")
     off_team_all = off_team_all.merge(
         pred_labels.rename(columns={"team": "posteam"}),
@@ -198,21 +217,29 @@ def train_formula_v2(
     )
 
     best_alpha = 10.0
-    best_s1 = -1.0
+    best_tune_s1 = -1.0
     best_ros = -1.0
-    best_score = -1.0
+    best_val_s1 = -1.0
     for alpha in ALPHAS:
-        fit_mask = (off_team_all["season"] >= fit_lo) & (off_team_all["season"] <= fit_hi)
+        fit_mask = (off_team_all["season"] >= fit_lo) & (off_team_all["season"] <= tune_hi)
         fit_df = off_team_all.loc[fit_mask].dropna(subset=["ppd_next_season"])
         coefs, intercept, stats = _fit_ridge(
             fit_df, OFFENSE_FORMULA_FEATURES_V2, "ppd_next_season", alpha=alpha
         )
-        s1 = _evaluate_s1(
+        tune_s1 = _evaluate_s1(
             off_team_all,
             OFFENSE_FORMULA_FEATURES_V2,
             coefs,
             intercept,
             (tune_lo, tune_hi),
+            feature_stats=stats,
+        )
+        val_s1 = _evaluate_s1(
+            off_team_all,
+            OFFENSE_FORMULA_FEATURES_V2,
+            coefs,
+            intercept,
+            (val_lo, val_hi),
             feature_stats=stats,
         )
         ros = _evaluate_ros(
@@ -223,18 +250,26 @@ def train_formula_v2(
             (tune_lo, tune_hi),
             feature_stats=stats,
         )
-        score = s1 + 0.15 * ros if np.isfinite(s1) and np.isfinite(ros) else s1
-        logger.info("alpha=%s tune S+1 r=%.4f ROS r=%.4f score=%.4f", alpha, s1, ros, score)
-        if np.isfinite(score) and score > best_score:
-            best_score = score
-            best_s1 = s1
+        logger.info(
+            "alpha=%s tune S+1=%.4f val S+1=%.4f ROS=%.4f",
+            alpha,
+            tune_s1,
+            val_s1,
+            ros,
+        )
+        if np.isfinite(val_s1) and (
+            val_s1 > best_val_s1 or (val_s1 == best_val_s1 and tune_s1 > best_tune_s1)
+        ):
+            best_val_s1 = val_s1
+            best_tune_s1 = tune_s1
             best_ros = ros
             best_alpha = alpha
 
     logger.info(
-        "Selected alpha=%s (tune S+1 r=%.4f ROS r=%.4f)",
+        "Selected alpha=%s (tune S+1 r=%.4f validate S+1 r=%.4f ROS r=%.4f)",
         best_alpha,
-        best_s1,
+        best_tune_s1,
+        best_val_s1,
         best_ros,
     )
 
@@ -277,9 +312,9 @@ def train_formula_v2(
     best_def_s1 = -1.0
     for alpha in ALPHAS:
         fit_mask = (def_team["season"] >= fit_lo) & (def_team["season"] <= fit_hi)
-        fit_df = def_team.loc[fit_mask].dropna(subset=["neg_opp_ppd_next"])
+        fit_df = def_team.loc[fit_mask].dropna(subset=["def_quality_next"])
         coefs, intercept, def_stats = _fit_ridge(
-            fit_df, DEFENSE_FORMULA_FEATURES_V2, "neg_opp_ppd_next", alpha=alpha
+            fit_df, DEFENSE_FORMULA_FEATURES_V2, "def_quality_next", alpha=alpha
         )
         s1 = _evaluate_s1(
             def_team,
@@ -287,16 +322,16 @@ def train_formula_v2(
             coefs,
             intercept,
             (tune_lo, tune_hi),
-            label_col="neg_opp_ppd_next",
+            label_col="def_quality_next",
             feature_stats=def_stats,
         )
         if np.isfinite(s1) and s1 > best_def_s1:
             best_def_s1 = s1
             best_def_alpha = alpha
 
-    def_final = def_team.loc[def_team["season"] <= val_hi].dropna(subset=["neg_opp_ppd_next"])
+    def_final = def_team.loc[def_team["season"] <= val_hi].dropna(subset=["def_quality_next"])
     def_coefs, def_intercept, def_stats = _fit_ridge(
-        def_final, DEFENSE_FORMULA_FEATURES_V2, "neg_opp_ppd_next", alpha=best_def_alpha
+        def_final, DEFENSE_FORMULA_FEATURES_V2, "def_quality_next", alpha=best_def_alpha
     )
     def_cal = _drive_level_calibration(
         def_feat,
@@ -304,7 +339,7 @@ def train_formula_v2(
         def_coefs,
         def_intercept,
         (fit_lo, val_hi),
-        target=1.5,
+        target=DEFENSE_CALIBRATION_TARGET,
         feature_stats=def_stats,
     )
 
@@ -313,9 +348,10 @@ def train_formula_v2(
             "version": "v2",
             "train_seasons": [fit_lo, train_end],
             "train_objective": "ppd_next_season",
-            "tune_s1_r": best_s1,
+            "tune_s1_r": best_tune_s1,
             "tune_ros_r": best_ros,
             "validate_s1_r": val_s1,
+            "alpha_select_metric": "validate_s1",
             "ridge_alpha_offense": best_alpha,
             "ridge_alpha_defense": best_def_alpha,
             "offense": {

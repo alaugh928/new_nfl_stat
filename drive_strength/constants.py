@@ -15,6 +15,8 @@ TRAIN_TUNE_SEASONS = (2013, 2017)
 TRAIN_VALIDATE_SEASONS = (2018, 2019)
 TRAIN_HOLDOUT_SEASONS = (2020, 2024)
 DRIVE_CALIBRATION_TARGET = 2.2
+DEFENSE_CALIBRATION_TARGET = 1.5
+TRAIN_FEATURE_SPLIT_WEEK = 8
 CACHE_DIR = PACKAGE_DIR / "cache"
 OUTPUT_DIR = PACKAGE_DIR / "output"
 
@@ -166,10 +168,10 @@ OFFENSE_FORMULA_FEATURES_V2 = [
     "def_penalty_yards_16_plus",
     "negative_play_rate",
     "sack_count",
-    "start_yardline_100",
 ]
 
 OFFENSE_DIAGNOSTIC_FEATURES = [
+    "start_yardline_100",
     "best_yardline_100",
     "plays_in_opp40",
     "plays_in_opp20",
@@ -199,7 +201,6 @@ DEFENSE_FORMULA_FEATURES_V2 = [
     "off_penalty_yards_16_plus_drawn",
     "negative_play_forced_rate",
     "sack_forced_count",
-    "start_yardline_100",
 ]
 
 DEF_AUTO_FIRST_PENALTY_TYPES = frozenset(
